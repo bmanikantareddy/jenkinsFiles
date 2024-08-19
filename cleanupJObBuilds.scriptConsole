@@ -1,0 +1,32 @@
+// Define the folder path and job name
+def folderPath = 'fc-devops'  // Path to the folder containing the job
+def jobName = 'disableLinkerd'         // Job name within the folder
+def keepBuilds = 1
+
+// Get the folder by path
+def folder = Jenkins.instance.getItemByFullName(folderPath)
+if (folder == null) {
+    println "Folder '${folderPath}' not found!"
+    return
+}
+
+// Get the job from the folder
+def job = folder.getItem(jobName)
+if (job == null) {
+    println "Job '${jobName}' not found in folder '${folderPath}'!"
+    return
+}
+
+// Collect builds into a list and sort them by build number in descending order
+def builds = job.builds.toList().sort { -it.number }
+
+// Delete old builds if there are more than the number of builds to keep
+if (builds.size() > keepBuilds) {
+    def buildsToDelete = builds.drop(keepBuilds)
+    buildsToDelete.each { build ->
+        println "Deleting build ${build.number}"
+        build.delete()
+    }
+}
+
+println "Cleanup complete."
